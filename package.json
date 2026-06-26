@@ -1,9 +1,8 @@
 {
   "name": "issue2dev",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "type": "module",
-  "description": "Issue2Dev implementation prototype.",
+  "description": "Deterministic GitHub issue analysis that emits repository-context-aware PRD and report artifacts.",
   "license": "Apache-2.0",
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -12,7 +11,31 @@
   "bin": {
     "issue2dev": "./bin/issue2dev.mjs"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "docs/",
+    "examples/",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "CONTRIBUTING.md"
+  ],
+  "keywords": [
+    "github-issues",
+    "prd",
+    "repository-intelligence",
+    "cli"
+  ],
+  "sideEffects": false,
   "scripts": {
+    "build": "tsup",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "phase3:spike": "tsx spikes/phase-3-validation/walking-skeleton.ts --from-file spikes/phase-3-validation/fixtures/issue.example.json",
@@ -27,6 +50,7 @@
     "@types/node": "^22.10.7",
     "issue2dev": "link:.",
     "tsx": "^4.19.2",
+    "tsup": "^8.3.5",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }

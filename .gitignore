@@ -10,3 +10,6 @@ internal/
 spikes/phase-3-validation/reports/*
 !spikes/phase-3-validation/reports/.gitkeep
 .issue2dev/
+*.tgz
+secrets/
+*.env
