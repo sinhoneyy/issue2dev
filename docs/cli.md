@@ -51,8 +51,8 @@ For authenticated GitHub reads, set `GITHUB_TOKEN` before running the command. P
 | File | Description |
 | --- | --- |
 | `repository-context.json` | RepositoryContext generated from issue and repository signals. |
-| `analysis.json` | Structured deterministic analysis. |
-| `analysis.md` | Markdown analysis report. |
+| `analysis.json` | Structured analysis with scores, classification, and diagnosis (root cause hypotheses, solution strategy, implementation plan, test strategy, risks). |
+| `analysis.md` | Human-readable engineering diagnosis: root cause hypotheses, solution strategy, implementation plan, test strategy, confidence, and limitations. |
 | `artifacts.json` | Structured artifact bundle. |
 | `prd.md` | Deterministic PRD-style artifact. |
 

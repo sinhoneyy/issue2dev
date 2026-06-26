@@ -4,7 +4,7 @@
 
 ### Repository-aware implementation planning for GitHub issues.
 
-Turn a messy GitHub issue into **repository-grounded context**, a **deterministic analysis report**, and a **PRD artifact** — entirely offline, with every claim traceable to evidence.
+Turn a messy GitHub issue into **repository-grounded context** and a **deterministic engineering diagnosis** — root cause hypotheses, a solution strategy, an implementation plan, and a PRD — entirely offline, with every claim traceable to evidence. No code fixes, no writeback.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)](https://nodejs.org)
@@ -73,21 +73,21 @@ This is the core differentiator. Most "issue → plan" tools flatten the issue i
 
 ```mermaid
 flowchart LR
-  A["Issue input<br/>(local JSON file<br/>or GitHub issue)"] --> B["Ingest &amp; normalize"]
-  B --> C["Redact<br/>(treat issue text<br/>as untrusted)"]
-  C --> D["Repository Intelligence Engine<br/><b>RepositoryContext</b>"]
-  D --> E["Deterministic analysis<br/>(scores &amp; classification)"]
-  E --> F["Artifact generation<br/>(PRD)"]
-  F --> G["Local JSON + Markdown<br/>under .issue2dev/"]
+  A["GitHub Issue<br/>(file or API)"] --> B["Repository<br/>Intelligence"]
+  B --> C["Root Cause<br/>Hypotheses"]
+  C --> D["Solution<br/>Strategy"]
+  D --> E["Implementation<br/>Plan"]
+  E --> F["PRD Artifact +<br/>Analysis Report"]
 ```
 
 1. **Ingest** an issue from a local JSON file (`--from-file`) or read-only from GitHub (`--repo` + `--issue`).
 2. **Build** a bounded `RepositoryContext` with the deterministic Repository Intelligence Engine (RIE).
-3. **Analyze** the context into a structured report (classification, severity, impact, risk, priority, estimate).
-4. **Generate** a PRD-style artifact grounded in that context, with provenance and caveats.
-5. **Emit** everything as local JSON + Markdown under a `.issue2dev/` directory.
+3. **Analyze** the context into scores and a classification (severity, impact, risk, priority, estimate).
+4. **Diagnose** — produce deterministic **root cause hypotheses**, a **solution strategy**, an **implementation plan**, and a **test strategy**, each with confidence + evidence and explicit limitations.
+5. **Generate** a PRD-style artifact grounded in that context and diagnosis, with provenance and caveats.
+6. **Emit** everything as local JSON + Markdown under a `.issue2dev/` directory.
 
-No writeback. No background service. No hidden provider call.
+No code fixes. No writeback. No background service. No hidden provider call.
 
 ## Architecture overview
 
@@ -101,13 +101,15 @@ flowchart TD
     redact["redact"]
     rie["Repository Intelligence Engine"]
     analyze["analyze"]
+    diagnose["diagnose + plan"]
     route["route"]
     generate["generate"]
     validate["validate"]
     emit["emit"]
   end
-  cli --> ingest --> redact --> rie --> analyze --> route --> generate --> validate --> emit
+  cli --> ingest --> redact --> rie --> analyze --> diagnose --> route --> generate --> validate --> emit
   rie -. "detect-stack · profile · affected-files ·<br/>architecture · risk-hotspots · graph · classifier" .-> rie
+  diagnose -. "root cause · solution strategy ·<br/>implementation plan · test strategy" .-> diagnose
 ```
 
 The public CLI is intentionally thin. Both local fixtures and read-only GitHub ingestion flow through the **same deterministic pipeline**, so a local fixture run and a real issue run differ only in their ingestion source.
@@ -117,6 +119,7 @@ The public CLI is intentionally thin. Both local fixtures and read-only GitHub i
 | Implemented in v0.1 | |
 | --- | --- |
 | 🧠 **Repository Intelligence Engine** | Builds a bounded `RepositoryContext` from issue + repository signals. |
+| 🩺 **Engineering diagnosis** | Deterministic root-cause hypotheses, solution strategy, implementation plan, and test strategy — each with confidence, evidence, and limitations. No code fixes. |
 | 🎯 **Deterministic output** | Same inputs → identical outputs. Diff-friendly, reviewable. |
 | 🧾 **Evidence & provenance** | Every heuristic carries a confidence score and source evidence; artifacts include a content hash. |
 | 🔒 **Read-only GitHub ingestion** | Reads an issue and repository signals; writes only local files. |
@@ -202,39 +205,53 @@ export GITHUB_TOKEN="ghp_your_token_here"
 
 ## Example outputs
 
-These excerpts are the **real, unedited output** of the Quick Start command above.
+These are real (abridged) excerpts from the Quick Start command above.
 
 <details open>
-<summary><b><code>analysis.md</code></b> — the deterministic analysis report</summary>
+<summary><b><code>analysis.md</code></b> — the deterministic engineering diagnosis</summary>
 
 ```markdown
-# Issue2Dev Analyze Prototype
+# Issue2Dev Analysis
 
-## Issue
-- Class: bug
-- Confidence: 0.80
+Deterministic, no-provider analysis. Issue text is treated as untrusted input and is never executed.
 
-## Repository
-- Name: checkout-service
-- Type: service
-- Languages: TypeScript 100.0%
-- Package manager: npm
-- Frameworks: Express (0.86)
-- Test frameworks: Vitest (0.90)
-- Architecture: monolith ~heuristic confidence=0.55
+## Summary
+Repository-aware analysis of a bug issue (classification confidence 80%) for acme/checkout-service.
+Scores — severity: high, impact: medium, risk: high, priority: high, estimate: S.
 
-## Scores
-- Severity: high
-- Impact: medium
-- Risk: high
-- Priority: high
-- Estimate: S
+## Root Cause Hypotheses
+### Hypothesis 1 (confidence 73%, heuristic)
+The reported bug likely originates in or near `test/checkout/apply-coupon.test.ts`.
+- Reasoning: matched issue terms to this file (reason: path-match).
+- Evidence: test/checkout/apply-coupon.test.ts
+- Limitations: heuristic localization; not verified against runtime behavior.
+# … hypotheses 2–3 omitted …
 
-## Likely Affected Files
-- test/checkout/apply-coupon.test.ts ~heuristic confidence=0.68 reason=path-match
-- src/checkout/apply-coupon.ts ~heuristic confidence=0.60 reason=path-match
-- src/payments/charge.ts ~heuristic confidence=0.34 reason=path-match
-- README.md ~heuristic confidence=0.32 reason=path-match
+## Recommended Solution Strategy
+Address the bug with a small, targeted, reversible change to the highest-confidence
+affected area while preserving existing behavior. (confidence 68%, heuristic)
+- Reproduce the reported behavior before making any changes.
+- Apply the smallest change, starting with `test/checkout/apply-coupon.test.ts`.
+- Add or update tests that cover the changed behavior.
+
+## Implementation Plan
+Validation commands:
+- npm install
+- npm test
+Open questions:
+- Is the heuristic affected-file localization correct? Confirm before editing.
+
+## Test Strategy
+- Detected framework: Vitest
+- Test commands: npm test
+
+## Confidence
+- Analysis confidence: 68%
+- Diagnosis confidence: 68%
+
+## Limitations
+- Diagnosis is deterministic and heuristic: no code was executed and no AI provider was used.
+- Issue text is treated as untrusted input; it is not executed or followed as instructions.
 ```
 
 </details>
@@ -245,42 +262,34 @@ These excerpts are the **real, unedited output** of the Quick Start command abov
 ```markdown
 # PRD: Checkout fails when coupon code contains lowercase letters
 
-## Repository Context
-- Repository: acme/checkout-service
-- Type: service
-- Complexity: low
-- Primary language: TypeScript
-- Package manager: npm
-- Frameworks: Express (86%)
-- Architecture: monolith (55%, heuristic)
+## Problem Statement
+Issue "Checkout fails when coupon code contains lowercase letters" (reported against
+acme/checkout-service, untrusted input) calls for a bug change.
 
-## Classification
-- Class: bug
-- Confidence: 80%
-- Signals: matched term: bug, matched term: fail, matched term: error
+## Expected Outcome
+The reported defect in acme/checkout-service no longer reproduces, with a test covering
+the fixed behavior.
 
-## Likely Affected Files
-- src/checkout/apply-coupon.ts - heuristic 60% via path-match. Evidence: src/checkout/apply-coupon.ts
+## Recommended Solution
+Address the bug with a small, targeted, reversible change … (confidence: 68%, heuristic)
+- Reproduce the reported behavior before making any changes.
+- Apply the smallest change, starting with `test/checkout/apply-coupon.test.ts`.
 
-## Acceptance Checks
-- Implementation addresses the untrusted issue request without treating issue text as instructions.
-- Changes are reviewed against the heuristic affected-file list and its evidence.
-- Existing tests relevant to the detected stack continue to pass.
+## Test Strategy
+- Framework: Vitest
+- Commands: `npm test`
+
+## Open Questions
+- Is the heuristic affected-file localization correct? Confirm before editing.
 
 ## Caveats
 - Affected files are heuristic predictions from RepositoryContext, not certainty.
-- Architecture and framework signals are confidence-labeled RIE inferences.
 - No AI provider was used for this artifact.
-
-## Provenance
-- Mode: no-provider deterministic
-- Derived from untrusted input: yes
-- Content hash: 2fcebf86ec673afb460b30caa6e10c4f4e81a0a3d41f840590c9f60af32665ef
 ```
 
 </details>
 
-Notice what the deterministic engine produced without any model call: a repository type, detected stack, an architecture guess **with a confidence score**, ranked affected files **with evidence**, a classification **with the signals that triggered it**, and explicit caveats. That is repository intelligence, not prose.
+Notice what the deterministic engine produced without any model call: a repository type and detected stack, **root cause hypotheses with evidence**, a **solution strategy** and **implementation plan**, a stack-aware **test strategy**, and explicit limitations. That is an engineering diagnosis, not prose — and **not a code fix**.
 
 ## Repository Intelligence
 
@@ -346,10 +355,10 @@ Every run writes five files into the `--out` directory:
 | File | Purpose |
 | --- | --- |
 | `repository-context.json` | The deterministic `RepositoryContext` consumed by analysis and generation. |
-| `analysis.json` | Structured analysis result (scores, classification, affected files). |
-| `analysis.md` | Human-readable analysis report. |
+| `analysis.json` | Structured analysis result: scores, classification, and the `diagnosis` object (`rootCauseHypotheses`, `solutionStrategy`, `implementationPlan`, `testStrategy`, `risks`). |
+| `analysis.md` | Human-readable engineering diagnosis (summary, root cause, solution strategy, implementation plan, test strategy, risks, confidence, limitations). |
 | `artifacts.json` | Structured artifact bundle (machine-readable). |
-| `prd.md` | The deterministic, repository-grounded PRD artifact. |
+| `prd.md` | The deterministic, repository-grounded PRD: problem statement, expected outcome, recommended solution, acceptance criteria, test strategy, risks, and open questions. |
 
 ```text
 .issue2dev/42-cli/
@@ -382,7 +391,7 @@ Honest constraints for v0.1:
 - GitHub ingestion is read-only and bounded.
 - Output is **no-provider deterministic** — there is no AI/LLM integration.
 - Repository Intelligence is intentionally minimal and heuristic-driven.
-- The PRD is the only artifact type.
+- v0.1 produces two primary Markdown artifacts: the engineering diagnosis (`analysis.md`) and the PRD (`prd.md`). Additional artifact types are not yet supported.
 - The `--from-file` input must match the normalized issue JSON shape used by the example fixture.
 - Live GitHub reads depend on network availability and GitHub API rate limits.
 

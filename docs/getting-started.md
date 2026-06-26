@@ -47,8 +47,8 @@ The `--out` directory is created if needed and must live under a `.issue2dev/` p
 | File | Description |
 | --- | --- |
 | `repository-context.json` | RepositoryContext used by analysis and artifact generation. |
-| `analysis.json` | Structured deterministic analysis. |
-| `analysis.md` | Markdown analysis report. |
+| `analysis.json` | Structured analysis with scores, classification, and diagnosis (root cause hypotheses, solution strategy, implementation plan, test strategy, risks). |
+| `analysis.md` | Human-readable engineering diagnosis: root cause hypotheses, solution strategy, implementation plan, test strategy, confidence, and limitations. |
 | `artifacts.json` | Structured artifact bundle. |
 | `prd.md` | Deterministic PRD-style artifact. |
 
