@@ -7,8 +7,7 @@ coverage/
 .env.*
 !.env.example
 internal/
-spikes/phase-3-validation/reports/*
-!spikes/phase-3-validation/reports/.gitkeep
+spikes/phase-3-validation/reports/
 .issue2dev/
 *.tgz
 secrets/
