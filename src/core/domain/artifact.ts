@@ -35,11 +35,24 @@ export const PrdArtifactBodySchema = z.object({
     packageManager: z.string().min(1),
     frameworks: z.array(z.object({ name: z.string().min(1), confidence: z.number().min(0).max(1) }))
   }),
+  problemStatement: z.string().min(1),
+  expectedOutcome: z.string().min(1),
   classification: z.object({
     class: z.string().min(1),
     confidence: z.number().min(0).max(1),
     signals: z.array(z.string())
   }),
+  recommendedSolution: z.object({
+    summary: z.string().min(1),
+    steps: z.array(z.string()),
+    confidence: z.number().min(0).max(1)
+  }),
+  testStrategy: z.object({
+    framework: z.string().min(1),
+    recommendations: z.array(z.string()),
+    commands: z.array(z.string())
+  }),
+  openQuestions: z.array(z.string()),
   affectedFiles: z.array(z.object({
     path: z.string().min(1),
     confidence: z.number().min(0).max(1),

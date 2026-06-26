@@ -1,7 +1,24 @@
 ﻿import type { Artifact } from "../../core/domain/artifact.js";
 import { ARTIFACT_SCHEMA_VERSION } from "../../core/domain/artifact.js";
 import type { RepositoryContext, SourceRef } from "../../core/domain/repository-context.js";
+import { diagnoseContext } from "../../core/pipeline/stages/diagnose.js";
 import { createArtifactProvenance } from "../provenance.js";
+
+function expectedOutcomeFor(issueClass: string, repository: string): string {
+  switch (issueClass) {
+    case "bug":
+      return `The reported defect in ${repository} no longer reproduces, with a test covering the fixed behavior.`;
+    case "feature":
+    case "enhancement":
+      return `${repository} gains the requested capability, scoped to a small reviewable change with tests.`;
+    case "refactor":
+      return `${repository} is restructured with no change to external behavior, verified by existing tests.`;
+    case "docs":
+      return `${repository} documentation accurately reflects the intended behavior.`;
+    default:
+      return `${repository} addresses the issue with a small, reviewable, tested change.`;
+  }
+}
 
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
@@ -28,6 +45,7 @@ export function createPrdArtifact(context: RepositoryContext): Artifact {
   const issueTitle = context.issue?.title.value ?? "Untitled issue";
   const issueBody = context.issue?.body.value ?? "";
   const frameworks = context.stack.frameworks.map((framework) => ({ name: framework.name, confidence: framework.confidence }));
+  const diagnosis = diagnoseContext(context);
   const body = {
     issue: {
       title: issueTitle,
@@ -35,6 +53,8 @@ export function createPrdArtifact(context: RepositoryContext): Artifact {
       trust: "untrusted" as const
     },
     summary: `Plan a ${context.classification.class} change for ${repoName(context)} using the repository context assembled by the deterministic RIE.`,
+    problemStatement: `Issue "${truncate(issueTitle, 160)}" (reported against ${repoName(context)}, untrusted input) calls for a ${context.classification.class} change.`,
+    expectedOutcome: expectedOutcomeFor(context.classification.class, repoName(context)),
     repositoryContext: {
       repository: repoName(context),
       repoType: context.repo.type,
@@ -49,6 +69,13 @@ export function createPrdArtifact(context: RepositoryContext): Artifact {
       frameworks
     },
     classification: context.classification,
+    recommendedSolution: {
+      summary: diagnosis.solutionStrategy.summary,
+      steps: diagnosis.solutionStrategy.steps,
+      confidence: diagnosis.solutionStrategy.confidence
+    },
+    testStrategy: diagnosis.testStrategy,
+    openQuestions: diagnosis.implementationPlan.openQuestions,
     affectedFiles: context.affectedFiles.map((file) => ({
       path: file.path,
       confidence: file.confidence,

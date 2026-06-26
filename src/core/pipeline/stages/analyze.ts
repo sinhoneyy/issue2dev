@@ -1,5 +1,6 @@
 import { IssueAnalysisSchema, type IssueAnalysis, type Score } from "../../domain/analysis.js";
 import type { RepositoryContext } from "../../domain/repository-context.js";
+import { diagnoseContext } from "./diagnose.js";
 
 function score(value: Score["value"], confidence: number, signals: string[], rationale: string): Score {
   return { value, confidence, signals, rationale };
@@ -21,6 +22,7 @@ export function analyzeContext(context: RepositoryContext): IssueAnalysis {
     risk: score(riskValue, 0.66, context.riskHotspots.map((risk) => risk.description), "Estimated from deterministic RIE risk hotspots."),
     priority: score(priorityValue, 0.6, [context.classification.class, riskValue], "Prototype priority combines issue class and risk."),
     estimate: { value: estimateValue, rationale: "Prototype estimate is based on likely affected-file count only." },
+    diagnosis: diagnoseContext(context),
     confidence: Number(((context.classification.confidence + context.architecture.confidence) / 2).toFixed(2)),
     ...(context.degraded ? { degraded: context.degraded } : {})
   };

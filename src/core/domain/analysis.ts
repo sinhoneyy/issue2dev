@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DiagnosisSchema } from "./diagnosis.js";
 import { DegradedInfoSchema, IssueClassificationSchema, RepositoryContextSchema } from "./repository-context.js";
 
 export const ScoreSchema = z.object({
@@ -24,6 +25,7 @@ export const IssueAnalysisSchema = z.object({
   risk: ScoreSchema,
   priority: ScoreSchema,
   estimate: EstimateSchema,
+  diagnosis: DiagnosisSchema,
   confidence: z.number().min(0).max(1),
   degraded: DegradedInfoSchema.optional()
 });

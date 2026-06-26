@@ -25,8 +25,10 @@ describe("Phase 4 offline analyze prototype", () => {
 
       expect(firstContext).toEqual(secondContext);
       expect(firstAnalysis).toEqual(secondAnalysis);
-      expect(markdown).toContain("No-provider deterministic analysis");
-      expect(markdown).toContain("Likely Affected Files");
+      expect(markdown).toContain("# Issue2Dev Analysis");
+      expect(markdown).toContain("## Root Cause Hypotheses");
+      expect(markdown).toContain("## Recommended Solution Strategy");
+      expect(markdown).toContain("## Implementation Plan");
     } finally {
       await rm(firstDir, { recursive: true, force: true });
       await rm(secondDir, { recursive: true, force: true });

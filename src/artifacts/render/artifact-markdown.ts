@@ -24,7 +24,15 @@ function renderPrdBody(body: PrdArtifactBody): string {
     ? body.risks.map((risk) => `- ${risk.severity}: ${escapeMarkdown(risk.description)} (${confidence(risk.confidence)}). Evidence: ${renderEvidence(risk.evidence)}`).join("\n")
     : "- No risk hotspots identified by the deterministic RIE.";
 
+  const testCommands = body.testStrategy.commands.length > 0 ? body.testStrategy.commands.map((command) => `\`${escapeMarkdown(command)}\``).join(", ") : "not detected";
+
   return [
+    `## Problem Statement`,
+    escapeMarkdown(body.problemStatement),
+    "",
+    `## Expected Outcome`,
+    escapeMarkdown(body.expectedOutcome),
+    "",
     `## Summary`,
     escapeMarkdown(body.summary),
     "",
@@ -49,14 +57,26 @@ function renderPrdBody(body: PrdArtifactBody): string {
     `- Confidence: ${confidence(body.classification.confidence)}`,
     `- Signals: ${body.classification.signals.map(escapeMarkdown).join(", ") || "none"}`,
     "",
+    `## Recommended Solution`,
+    `${escapeMarkdown(body.recommendedSolution.summary)} (confidence: ${confidence(body.recommendedSolution.confidence)}, heuristic)`,
+    ...body.recommendedSolution.steps.map((step) => `- ${escapeMarkdown(step)}`),
+    "",
     `## Likely Affected Files`,
     affectedFiles,
+    "",
+    `## Acceptance Criteria`,
+    ...body.acceptanceChecks.map((item) => `- ${escapeMarkdown(item)}`),
+    "",
+    `## Test Strategy`,
+    `- Framework: ${escapeMarkdown(body.testStrategy.framework)}`,
+    `- Commands: ${testCommands}`,
+    ...body.testStrategy.recommendations.map((item) => `- ${escapeMarkdown(item)}`),
     "",
     `## Risks`,
     risks,
     "",
-    `## Acceptance Checks`,
-    ...body.acceptanceChecks.map((item) => `- ${escapeMarkdown(item)}`),
+    `## Open Questions`,
+    ...(body.openQuestions.length > 0 ? body.openQuestions.map((item) => `- ${escapeMarkdown(item)}`) : ["- None recorded."]),
     "",
     `## Caveats`,
     ...body.caveats.map((item) => `- ${escapeMarkdown(item)}`)
