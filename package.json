@@ -2,8 +2,16 @@
   "name": "issue2dev",
   "version": "0.1.0",
   "type": "module",
-  "description": "Deterministic GitHub issue analysis that emits repository-context-aware PRD and report artifacts.",
+  "description": "Repository-aware implementation planning for GitHub Issues using deterministic Repository Intelligence.",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/sinhoneyy/issue2dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sinhoneyy/issue2dev.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sinhoneyy/issue2dev/issues"
+  },
   "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=20"
