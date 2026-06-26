@@ -1,9 +1,12 @@
-export { createDeterministicIntelligenceEngine, DeterministicIntelligenceEngine } from "./intelligence/engine.js";
+﻿export { createDeterministicIntelligenceEngine, DeterministicIntelligenceEngine } from "./intelligence/engine.js";
 export { runAnalyzeCli, runAnalyzePrototype, runGeneratePrototype } from "./core/pipeline/pipeline.js";
 export { renderAnalyzeReport } from "./artifacts/render/analyze-report.js";
 export { renderArtifactMarkdown } from "./artifacts/render/artifact-markdown.js";
 export { createPrdArtifact } from "./artifacts/schemas/prd.js";
 export { getArtifactGenerator, listArtifactTypes } from "./artifacts/registry.js";
+export { createGitHubClient } from "./github/client.js";
+export { ingestGitHubIssue, OctokitGitHubPort } from "./github/ingest.js";
+export type { GitHubIssueBundle, GitHubIssueRef, GitHubPort } from "./core/ports/github-port.js";
 export type { IntelligenceEngine } from "./core/ports/intelligence-engine-port.js";
 export * from "./core/domain/analysis.js";
 export * from "./core/domain/artifact.js";

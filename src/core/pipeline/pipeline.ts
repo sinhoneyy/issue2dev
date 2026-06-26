@@ -1,16 +1,18 @@
 ﻿import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { renderAnalyzeReport } from "../../artifacts/render/analyze-report.js";
 import { createDeterministicIntelligenceEngine } from "../../intelligence/engine.js";
 import type { IssueAnalysis } from "../domain/analysis.js";
 import type { GenerateOutcome } from "../domain/generation.js";
 import type { RepositoryContext } from "../domain/repository-context.js";
 import type { Result } from "../domain/result.js";
-import { renderAnalyzeReport } from "../../artifacts/render/analyze-report.js";
+import type { GitHubIssueRef } from "../ports/github-port.js";
 import { PipelineEvents } from "./events.js";
 import { analyzeContext } from "./stages/analyze.js";
 import { emitAnalyzeAndArtifacts, emitArtifacts, type EmitAnalyzeAndArtifactsOutput } from "./stages/emit.js";
 import { generateArtifacts } from "./stages/generate.js";
-import { ingestFromFile } from "./stages/ingest-from-file.js";
+import { ingestFromFile, type FromFileIngestion } from "./stages/ingest-from-file.js";
+import { ingestFromGitHub } from "./stages/ingest-from-github.js";
 import { runIntelligence } from "./stages/intelligence.js";
 import { redactInputs } from "./stages/redact.js";
 import { routeArtifacts } from "./stages/route.js";
@@ -26,6 +28,10 @@ export type GeneratePrototypeOutput = GenerateOutcome & {
   context: RepositoryContext;
   analysis: IssueAnalysis;
 };
+
+export type AnalyzeCliInput =
+  | { fromFile: string; outDir: string }
+  | { github: GitHubIssueRef; outDir: string };
 
 export type AnalyzeCliOutput = Omit<GeneratePrototypeOutput, "files"> & {
   files: EmitAnalyzeAndArtifactsOutput;
@@ -49,13 +55,9 @@ function unexpectedFailure<T>(input: { started: number; events: PipelineEvents; 
   };
 }
 
-async function runDeterministicStages(input: { fromFile: string; events: PipelineEvents }): Promise<{ context: RepositoryContext; analysis: IssueAnalysis }> {
-  let end = input.events.start("ingest");
-  const ingested = await ingestFromFile(input.fromFile);
-  end();
-
-  end = input.events.start("redact");
-  const redacted = redactInputs(ingested);
+async function runDeterministicStages(input: { ingested: FromFileIngestion; events: PipelineEvents }): Promise<{ context: RepositoryContext; analysis: IssueAnalysis }> {
+  let end = input.events.start("redact");
+  const redacted = redactInputs(input.ingested);
   end();
 
   end = input.events.start("intelligence");
@@ -69,11 +71,39 @@ async function runDeterministicStages(input: { fromFile: string; events: Pipelin
   return { context, analysis };
 }
 
+async function ingestCliInput(input: AnalyzeCliInput, events: PipelineEvents): Promise<FromFileIngestion> {
+  const end = events.start("ingest");
+  const ingested = "fromFile" in input ? await ingestFromFile(input.fromFile) : await ingestFromGitHub(input.github);
+  end();
+  return ingested;
+}
+
+async function routeGenerateValidate(input: { context: RepositoryContext; started: number; events: PipelineEvents }): Promise<Result<{ plan: GeneratePrototypeOutput["plan"]; artifacts: GeneratePrototypeOutput["artifacts"] }>> {
+  let end = input.events.start("route");
+  const plan = routeArtifacts(input.context);
+  end();
+
+  end = input.events.start("generate");
+  const artifacts = generateArtifacts({ context: input.context, plan });
+  end();
+
+  end = input.events.start("validate");
+  const validation = validateArtifacts(artifacts);
+  end();
+  if (!validation.ok) {
+    return validationFailure({ started: input.started, events: input.events, degraded: Boolean(input.context.degraded), message: validation.message, hint: validation.issues.join("; ") });
+  }
+  return { ok: true, data: { plan, artifacts: validation.artifacts }, error: null, meta: { durationMs: Math.round(performance.now() - input.started), degraded: Boolean(input.context.degraded), toolVersion: "0.0.0", events: input.events.list() } };
+}
+
 export async function runAnalyzePrototype(input: { fromFile: string; outDir: string }): Promise<Result<AnalyzePrototypeOutput>> {
   const started = performance.now();
   const events = new PipelineEvents();
   try {
-    const { context, analysis } = await runDeterministicStages({ fromFile: input.fromFile, events });
+    const endIngest = events.start("ingest");
+    const ingested = await ingestFromFile(input.fromFile);
+    endIngest();
+    const { context, analysis } = await runDeterministicStages({ ingested, events });
 
     const end = events.start("emit");
     await mkdir(input.outDir, { recursive: true });
@@ -97,30 +127,20 @@ export async function runGeneratePrototype(input: { fromFile: string; outDir: st
   const started = performance.now();
   const events = new PipelineEvents();
   try {
-    const { context, analysis } = await runDeterministicStages({ fromFile: input.fromFile, events });
+    const endIngest = events.start("ingest");
+    const ingested = await ingestFromFile(input.fromFile);
+    endIngest();
+    const { context, analysis } = await runDeterministicStages({ ingested, events });
+    const generated = await routeGenerateValidate({ context, started, events });
+    if (!generated.ok) return generated;
 
-    let end = events.start("route");
-    const plan = routeArtifacts(context);
-    end();
-
-    end = events.start("generate");
-    const artifacts = generateArtifacts({ context, plan });
-    end();
-
-    end = events.start("validate");
-    const validation = validateArtifacts(artifacts);
-    end();
-    if (!validation.ok) {
-      return validationFailure({ started, events, degraded: Boolean(context.degraded), message: validation.message, hint: validation.issues.join("; ") });
-    }
-
-    end = events.start("emit");
-    const files = await emitArtifacts({ artifacts: validation.artifacts, outDir: input.outDir });
+    const end = events.start("emit");
+    const files = await emitArtifacts({ artifacts: generated.data.artifacts, outDir: input.outDir });
     end();
 
     return {
       ok: true,
-      data: { schemaVersion: "0.1.0", context, analysis, plan, artifacts: validation.artifacts, files },
+      data: { schemaVersion: "0.1.0", context, analysis, plan: generated.data.plan, artifacts: generated.data.artifacts, files },
       error: null,
       meta: { durationMs: Math.round(performance.now() - started), degraded: Boolean(context.degraded), toolVersion: "0.0.0", events: events.list() }
     };
@@ -129,38 +149,27 @@ export async function runGeneratePrototype(input: { fromFile: string; outDir: st
   }
 }
 
-export async function runAnalyzeCli(input: { fromFile: string; outDir: string }): Promise<Result<AnalyzeCliOutput>> {
+export async function runAnalyzeCli(input: AnalyzeCliInput): Promise<Result<AnalyzeCliOutput>> {
   const started = performance.now();
   const events = new PipelineEvents();
   try {
-    const { context, analysis } = await runDeterministicStages({ fromFile: input.fromFile, events });
+    const ingested = await ingestCliInput(input, events);
+    const { context, analysis } = await runDeterministicStages({ ingested, events });
+    const generated = await routeGenerateValidate({ context, started, events });
+    if (!generated.ok) return generated;
 
-    let end = events.start("route");
-    const plan = routeArtifacts(context);
-    end();
-
-    end = events.start("generate");
-    const artifacts = generateArtifacts({ context, plan });
-    end();
-
-    end = events.start("validate");
-    const validation = validateArtifacts(artifacts);
-    end();
-    if (!validation.ok) {
-      return validationFailure({ started, events, degraded: Boolean(context.degraded), message: validation.message, hint: validation.issues.join("; ") });
-    }
-
-    end = events.start("emit");
-    const files = await emitAnalyzeAndArtifacts({ context, analysis, artifacts: validation.artifacts, outDir: input.outDir });
+    const end = events.start("emit");
+    const files = await emitAnalyzeAndArtifacts({ context, analysis, artifacts: generated.data.artifacts, outDir: input.outDir });
     end();
 
     return {
       ok: true,
-      data: { schemaVersion: "0.1.0", context, analysis, plan, artifacts: validation.artifacts, files },
+      data: { schemaVersion: "0.1.0", context, analysis, plan: generated.data.plan, artifacts: generated.data.artifacts, files },
       error: null,
       meta: { durationMs: Math.round(performance.now() - started), degraded: Boolean(context.degraded), toolVersion: "0.0.0", events: events.list() }
     };
   } catch (error) {
-    return unexpectedFailure({ started, events, error, hint: "Check the --from-file fixture shape and .issue2dev output directory." });
+    const hint = "fromFile" in input ? "Check the --from-file fixture shape and .issue2dev output directory." : "Check --repo, --issue, GitHub access, and the .issue2dev output directory.";
+    return unexpectedFailure({ started, events, error, hint });
   }
 }

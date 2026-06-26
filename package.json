@@ -20,6 +20,7 @@
     "phase5:generate": "tsx scripts/phase5-generate.ts --from-file examples/from-file/issue-42.json --out .issue2dev/42-generate"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
