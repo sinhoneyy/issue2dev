@@ -1,6 +1,10 @@
 export { createDeterministicIntelligenceEngine, DeterministicIntelligenceEngine } from "./intelligence/engine.js";
+export { runAnalyzePrototype } from "./core/pipeline/pipeline.js";
+export { renderAnalyzeReport } from "./artifacts/render/analyze-report.js";
 export type { IntelligenceEngine } from "./core/ports/intelligence-engine-port.js";
+export * from "./core/domain/analysis.js";
 export * from "./core/domain/issue.js";
 export * from "./core/domain/repository-context.js";
 export * from "./core/domain/repository-snapshot.js";
+export * from "./core/domain/result.js";
 export * from "./core/domain/trust.js";

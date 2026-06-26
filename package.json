@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Phase 3 validation skeleton for Issue2Dev.",
+  "description": "Issue2Dev implementation prototype.",
   "license": "Apache-2.0",
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -12,15 +12,16 @@
   "scripts": {
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
-    "phase3:spike": "tsx spikes/phase-3-validation/walking-skeleton.ts --from-file spikes/phase-3-validation/fixtures/issue.example.json"
+    "phase3:spike": "tsx spikes/phase-3-validation/walking-skeleton.ts --from-file spikes/phase-3-validation/fixtures/issue.example.json",
+    "phase4:analyze": "tsx scripts/phase4-analyze.ts --from-file examples/from-file/issue-42.json --out .issue2dev/42"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
-  },
-  "dependencies": {
-    "zod": "^4.4.3"
   }
 }
