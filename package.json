@@ -12,7 +12,7 @@
   "bugs": {
     "url": "https://github.com/sinhoneyy/issue2dev/issues"
   },
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10",
   "engines": {
     "node": ">=20"
   },

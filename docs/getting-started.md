@@ -7,7 +7,7 @@ The command can read either a local issue JSON file or a GitHub issue. In both m
 ## Requirements
 
 - Node.js 20 or newer
-- pnpm
+- pnpm 10 (the repo pins `pnpm@10` via `packageManager`; [Corepack](https://nodejs.org/api/corepack.html) resolves the correct version automatically)
 
 ## Installation
 

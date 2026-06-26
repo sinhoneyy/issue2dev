@@ -128,7 +128,7 @@ The public CLI is intentionally thin. Both local fixtures and read-only GitHub i
 ## Installation
 
 > [!NOTE]
-> Issue2Dev v0.1 is run from source. Requirements: **Node.js ≥ 20** and **pnpm** (the repo pins `pnpm@9.15.4` via `packageManager`; [Corepack](https://nodejs.org/api/corepack.html) will resolve it automatically).
+> Issue2Dev v0.1 is run from source. Requirements: **Node.js ≥ 20** and **pnpm 10** (the repo pins `pnpm@10` via `packageManager`; [Corepack](https://nodejs.org/api/corepack.html) will resolve the correct version automatically — no exact patch version to install).
 
 ```bash
 git clone <repository-url>
