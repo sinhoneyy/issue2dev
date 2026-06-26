@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.vitest/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+internal/
+.issue2dev/cache/
+spikes/phase-3-validation/reports/*
+!spikes/phase-3-validation/reports/.gitkeep

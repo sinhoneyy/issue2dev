@@ -1,0 +1,47 @@
+{
+  "issue": {
+    "owner": "acme",
+    "repo": "checkout-service",
+    "number": 42,
+    "url": "https://github.com/acme/checkout-service/issues/42",
+    "title": "Checkout fails when coupon code contains lowercase letters",
+    "body": "Customers report that applying coupon codes like summer10 fails, while SUMMER10 works. The checkout page shows a generic payment error instead of a coupon validation message.",
+    "labels": ["bug", "checkout", "coupons"],
+    "comments": [
+      {
+        "author": "support-engineer",
+        "body": "Reproduced on staging with coupon summer10. Network response says INVALID_COUPON_FORMAT."
+      }
+    ]
+  },
+  "repository": {
+    "name": "checkout-service",
+    "defaultBranch": "main",
+    "files": [
+      {
+        "path": "package.json",
+        "content": "{\"scripts\":{\"test\":\"vitest run\",\"build\":\"tsc -p tsconfig.json\"},\"dependencies\":{\"express\":\"^4.18.0\"},\"devDependencies\":{\"vitest\":\"^2.0.0\",\"typescript\":\"^5.0.0\"}}"
+      },
+      {
+        "path": "src/checkout/apply-coupon.ts",
+        "content": "export function applyCoupon(code: string) { return code.toUpperCase(); }"
+      },
+      {
+        "path": "src/payments/charge.ts",
+        "content": "export async function chargePayment() { return true; }"
+      },
+      {
+        "path": "test/checkout/apply-coupon.test.ts",
+        "content": "import { describe, expect, it } from 'vitest'; describe('applyCoupon', () => { it('accepts uppercase coupons', () => {}); });"
+      },
+      {
+        "path": "README.md",
+        "content": "# Checkout Service\n\nExpress service for checkout, coupon validation, and payment handoff."
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "content": "name: ci\non: [push, pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pnpm test"
+      }
+    ]
+  }
+}

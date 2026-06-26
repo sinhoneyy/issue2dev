@@ -1,0 +1,23 @@
+{
+  "name": "issue2dev",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Phase 3 validation skeleton for Issue2Dev.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "phase3:spike": "tsx spikes/phase-3-validation/walking-skeleton.ts --from-file spikes/phase-3-validation/fixtures/issue.example.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}
