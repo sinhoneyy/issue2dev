@@ -1,5 +1,5 @@
-﻿export { createDeterministicIntelligenceEngine, DeterministicIntelligenceEngine } from "./intelligence/engine.js";
-export { runAnalyzePrototype, runGeneratePrototype } from "./core/pipeline/pipeline.js";
+export { createDeterministicIntelligenceEngine, DeterministicIntelligenceEngine } from "./intelligence/engine.js";
+export { runAnalyzeCli, runAnalyzePrototype, runGeneratePrototype } from "./core/pipeline/pipeline.js";
 export { renderAnalyzeReport } from "./artifacts/render/analyze-report.js";
 export { renderArtifactMarkdown } from "./artifacts/render/artifact-markdown.js";
 export { createPrdArtifact } from "./artifacts/schemas/prd.js";

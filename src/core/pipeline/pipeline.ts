@@ -8,7 +8,7 @@ import type { Result } from "../domain/result.js";
 import { renderAnalyzeReport } from "../../artifacts/render/analyze-report.js";
 import { PipelineEvents } from "./events.js";
 import { analyzeContext } from "./stages/analyze.js";
-import { emitArtifacts } from "./stages/emit.js";
+import { emitAnalyzeAndArtifacts, emitArtifacts, type EmitAnalyzeAndArtifactsOutput } from "./stages/emit.js";
 import { generateArtifacts } from "./stages/generate.js";
 import { ingestFromFile } from "./stages/ingest-from-file.js";
 import { runIntelligence } from "./stages/intelligence.js";
@@ -27,28 +27,55 @@ export type GeneratePrototypeOutput = GenerateOutcome & {
   analysis: IssueAnalysis;
 };
 
+export type AnalyzeCliOutput = Omit<GeneratePrototypeOutput, "files"> & {
+  files: EmitAnalyzeAndArtifactsOutput;
+};
+
+function validationFailure<T>(input: { started: number; events: PipelineEvents; degraded: boolean; message: string; hint: string }): Result<T> {
+  return {
+    ok: false,
+    data: null,
+    error: { code: "VALIDATION", message: input.message, hint: input.hint },
+    meta: { durationMs: Math.round(performance.now() - input.started), degraded: input.degraded, toolVersion: "0.0.0", events: input.events.list() }
+  };
+}
+
+function unexpectedFailure<T>(input: { started: number; events: PipelineEvents; error: unknown; hint: string }): Result<T> {
+  return {
+    ok: false,
+    data: null,
+    error: { code: "UNEXPECTED", message: input.error instanceof Error ? input.error.message : "Unknown error", hint: input.hint },
+    meta: { durationMs: Math.round(performance.now() - input.started), degraded: false, toolVersion: "0.0.0", events: input.events.list() }
+  };
+}
+
+async function runDeterministicStages(input: { fromFile: string; events: PipelineEvents }): Promise<{ context: RepositoryContext; analysis: IssueAnalysis }> {
+  let end = input.events.start("ingest");
+  const ingested = await ingestFromFile(input.fromFile);
+  end();
+
+  end = input.events.start("redact");
+  const redacted = redactInputs(ingested);
+  end();
+
+  end = input.events.start("intelligence");
+  const context = await runIntelligence({ ...redacted, engine: createDeterministicIntelligenceEngine() });
+  end();
+  if (context.degraded) input.events.degraded("intelligence", context.degraded.reasons.join("; "));
+
+  end = input.events.start("analyze");
+  const analysis = analyzeContext(context);
+  end();
+  return { context, analysis };
+}
+
 export async function runAnalyzePrototype(input: { fromFile: string; outDir: string }): Promise<Result<AnalyzePrototypeOutput>> {
   const started = performance.now();
   const events = new PipelineEvents();
   try {
-    let end = events.start("ingest");
-    const ingested = await ingestFromFile(input.fromFile);
-    end();
+    const { context, analysis } = await runDeterministicStages({ fromFile: input.fromFile, events });
 
-    end = events.start("redact");
-    const redacted = redactInputs(ingested);
-    end();
-
-    end = events.start("intelligence");
-    const context = await runIntelligence({ ...redacted, engine: createDeterministicIntelligenceEngine() });
-    end();
-    if (context.degraded) events.degraded("intelligence", context.degraded.reasons.join("; "));
-
-    end = events.start("analyze");
-    const analysis = analyzeContext(context);
-    end();
-
-    end = events.start("emit");
+    const end = events.start("emit");
     await mkdir(input.outDir, { recursive: true });
     const files = {
       repositoryContext: path.join(input.outDir, "repository-context.json"),
@@ -62,7 +89,7 @@ export async function runAnalyzePrototype(input: { fromFile: string; outDir: str
 
     return { ok: true, data: { context, analysis, files }, error: null, meta: { durationMs: Math.round(performance.now() - started), degraded: Boolean(context.degraded), toolVersion: "0.0.0", events: events.list() } };
   } catch (error) {
-    return { ok: false, data: null, error: { code: "UNEXPECTED", message: error instanceof Error ? error.message : "Unknown error", hint: "Check the --from-file fixture shape and output directory." }, meta: { durationMs: Math.round(performance.now() - started), degraded: false, toolVersion: "0.0.0", events: events.list() } };
+    return unexpectedFailure({ started, events, error, hint: "Check the --from-file fixture shape and output directory." });
   }
 }
 
@@ -70,24 +97,9 @@ export async function runGeneratePrototype(input: { fromFile: string; outDir: st
   const started = performance.now();
   const events = new PipelineEvents();
   try {
-    let end = events.start("ingest");
-    const ingested = await ingestFromFile(input.fromFile);
-    end();
+    const { context, analysis } = await runDeterministicStages({ fromFile: input.fromFile, events });
 
-    end = events.start("redact");
-    const redacted = redactInputs(ingested);
-    end();
-
-    end = events.start("intelligence");
-    const context = await runIntelligence({ ...redacted, engine: createDeterministicIntelligenceEngine() });
-    end();
-    if (context.degraded) events.degraded("intelligence", context.degraded.reasons.join("; "));
-
-    end = events.start("analyze");
-    const analysis = analyzeContext(context);
-    end();
-
-    end = events.start("route");
+    let end = events.start("route");
     const plan = routeArtifacts(context);
     end();
 
@@ -99,12 +111,7 @@ export async function runGeneratePrototype(input: { fromFile: string; outDir: st
     const validation = validateArtifacts(artifacts);
     end();
     if (!validation.ok) {
-      return {
-        ok: false,
-        data: null,
-        error: { code: "VALIDATION", message: validation.message, hint: validation.issues.join("; ") },
-        meta: { durationMs: Math.round(performance.now() - started), degraded: Boolean(context.degraded), toolVersion: "0.0.0", events: events.list() }
-      };
+      return validationFailure({ started, events, degraded: Boolean(context.degraded), message: validation.message, hint: validation.issues.join("; ") });
     }
 
     end = events.start("emit");
@@ -118,6 +125,42 @@ export async function runGeneratePrototype(input: { fromFile: string; outDir: st
       meta: { durationMs: Math.round(performance.now() - started), degraded: Boolean(context.degraded), toolVersion: "0.0.0", events: events.list() }
     };
   } catch (error) {
-    return { ok: false, data: null, error: { code: "UNEXPECTED", message: error instanceof Error ? error.message : "Unknown error", hint: "Check the --from-file fixture shape and output directory." }, meta: { durationMs: Math.round(performance.now() - started), degraded: false, toolVersion: "0.0.0", events: events.list() } };
+    return unexpectedFailure({ started, events, error, hint: "Check the --from-file fixture shape and output directory." });
+  }
+}
+
+export async function runAnalyzeCli(input: { fromFile: string; outDir: string }): Promise<Result<AnalyzeCliOutput>> {
+  const started = performance.now();
+  const events = new PipelineEvents();
+  try {
+    const { context, analysis } = await runDeterministicStages({ fromFile: input.fromFile, events });
+
+    let end = events.start("route");
+    const plan = routeArtifacts(context);
+    end();
+
+    end = events.start("generate");
+    const artifacts = generateArtifacts({ context, plan });
+    end();
+
+    end = events.start("validate");
+    const validation = validateArtifacts(artifacts);
+    end();
+    if (!validation.ok) {
+      return validationFailure({ started, events, degraded: Boolean(context.degraded), message: validation.message, hint: validation.issues.join("; ") });
+    }
+
+    end = events.start("emit");
+    const files = await emitAnalyzeAndArtifacts({ context, analysis, artifacts: validation.artifacts, outDir: input.outDir });
+    end();
+
+    return {
+      ok: true,
+      data: { schemaVersion: "0.1.0", context, analysis, plan, artifacts: validation.artifacts, files },
+      error: null,
+      meta: { durationMs: Math.round(performance.now() - started), degraded: Boolean(context.degraded), toolVersion: "0.0.0", events: events.list() }
+    };
+  } catch (error) {
+    return unexpectedFailure({ started, events, error, hint: "Check the --from-file fixture shape and .issue2dev output directory." });
   }
 }

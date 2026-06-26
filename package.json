@@ -9,6 +9,9 @@
   "engines": {
     "node": ">=20"
   },
+  "bin": {
+    "issue2dev": "./bin/issue2dev.mjs"
+  },
   "scripts": {
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
@@ -21,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
+    "issue2dev": "link:.",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
