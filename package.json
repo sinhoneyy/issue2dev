@@ -13,7 +13,8 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "phase3:spike": "tsx spikes/phase-3-validation/walking-skeleton.ts --from-file spikes/phase-3-validation/fixtures/issue.example.json",
-    "phase4:analyze": "tsx scripts/phase4-analyze.ts --from-file examples/from-file/issue-42.json --out .issue2dev/42"
+    "phase4:analyze": "tsx scripts/phase4-analyze.ts --from-file examples/from-file/issue-42.json --out .issue2dev/42",
+    "phase5:generate": "tsx scripts/phase5-generate.ts --from-file examples/from-file/issue-42.json --out .issue2dev/42-generate"
   },
   "dependencies": {
     "zod": "^4.4.3"
