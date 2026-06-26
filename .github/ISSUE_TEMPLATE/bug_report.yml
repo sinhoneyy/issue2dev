@@ -1,0 +1,63 @@
+name: Bug report
+description: Report incorrect or unexpected behavior in Issue2Dev
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Issue2Dev v0.1 implements a
+        single `analyze` command with deterministic, no-provider output. Please confirm
+        the behavior you are reporting relates to implemented functionality (see the
+        README "Limitations" section).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including what you expected to happen instead.
+      placeholder: Running `analyze --from-file ...` produced ... but I expected ...
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Which mode were you using?
+      options:
+        - "analyze --from-file (local JSON)"
+        - "analyze --repo / --issue (GitHub)"
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command
+      description: The full `issue2dev analyze ...` command you ran. Redact any tokens.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output / error
+      description: Relevant console output or error message. Do not paste secrets or `GITHUB_TOKEN` values.
+      render: text
+    validations:
+      required: false
+  - type: input
+    id: versions
+    attributes:
+      label: Environment
+      description: Output of `node -v` and `pnpm -v`, plus your OS.
+      placeholder: "node v20.x, pnpm 10.x, Windows 11"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I ran `pnpm run build` before using the local binary.
+          required: true
+        - label: I checked the README "Limitations" and this is not an unimplemented/roadmap feature.
+          required: true

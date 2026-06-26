@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest an enhancement or new capability for Issue2Dev
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issue2Dev keeps a deliberately small, honest public surface. Several capabilities
+        (AI providers, GitHub Action, MCP server, additional artifact types, etc.) are
+        already tracked in the README "Roadmap / Planned Features" section. Please check
+        it before filing.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What are you trying to do, and what is missing or hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior you would like. Keep it scoped and reviewable.
+    validations:
+      required: true
+  - type: dropdown
+    id: roadmap
+    attributes:
+      label: Is this already on the roadmap?
+      options:
+        - "No / not sure"
+        - "Yes — listed in the README Roadmap"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or alternative approaches you have thought about.
+    validations:
+      required: false
