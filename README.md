@@ -1,6 +1,6 @@
 <div align="center">
 
-# Issue2Dev
+<img src="assets/issue2dev-banner.png" alt="Issue2Dev Banner" width="100%">
 
 ### Repository-aware implementation planning for GitHub issues.
 
@@ -58,13 +58,13 @@ This is the core differentiator. Most "issue → plan" tools flatten the issue i
 
 |                              | Raw issue text | Generic LLM summary | **Issue2Dev** |
 | ---------------------------- | :------------: | :-----------------: | :-----------: |
-| Repository-aware             |       ❌       |     ⚠️ shallow      |   ✅ `RepositoryContext` |
-| Deterministic / reproducible |       ✅       |          ❌         |   ✅           |
-| Evidence & provenance        |       ❌       |          ❌         |   ✅ per claim |
-| Confidence-labeled heuristics|       ❌       |          ❌         |   ✅           |
-| Works fully offline          |       ✅       |          ❌         |   ✅ (`--from-file`) |
-| Treats issue text as untrusted|      n/a      |    ⚠️ usually no    |   ✅           |
-| No vendor / API key required |       ✅       |          ❌         |   ✅           |
+| Repository-aware             |       <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">       |     <img src="assets/icons-3d/warning.png" width="16" valign="middle" alt="Partial"> shallow      |   <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes"> `RepositoryContext` |
+| Deterministic / reproducible |       <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes">       |          <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">         |   <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes">           |
+| Evidence & provenance        |       <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">       |          <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">         |   <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes"> per claim |
+| Confidence-labeled heuristics|       <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">       |          <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">         |   <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes">           |
+| Works fully offline          |       <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes">       |          <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">         |   <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes"> (`--from-file`) |
+| Treats issue text as untrusted|      n/a      |    <img src="assets/icons-3d/warning.png" width="16" valign="middle" alt="Partial"> usually no    |   <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes">           |
+| No vendor / API key required |       <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes">       |          <img src="assets/icons-3d/cross.png" width="16" valign="middle" alt="No">         |   <img src="assets/icons-3d/check.png" width="16" valign="middle" alt="Yes">           |
 
 > [!IMPORTANT]
 > Issue2Dev's heuristics are intentionally modest and clearly labeled. Affected-file predictions, architecture inference, and risk hotspots are **confidence-scored guesses grounded in evidence**, not certainties. The point is an honest, inspectable starting context — not magic.
@@ -118,15 +118,15 @@ The public CLI is intentionally thin. Both local fixtures and read-only GitHub i
 
 | Implemented in v0.1 | |
 | --- | --- |
-| 🧠 **Repository Intelligence Engine** | Builds a bounded `RepositoryContext` from issue + repository signals. |
-| 🩺 **Engineering diagnosis** | Deterministic root-cause hypotheses, solution strategy, implementation plan, and test strategy — each with confidence, evidence, and limitations. No code fixes. |
-| 🎯 **Deterministic output** | Same inputs → identical outputs. Diff-friendly, reviewable. |
-| 🧾 **Evidence & provenance** | Every heuristic carries a confidence score and source evidence; artifacts include a content hash. |
-| 🔒 **Read-only GitHub ingestion** | Reads an issue and repository signals; writes only local files. |
-| 📄 **PRD artifact generation** | Repository-grounded PRD Markdown with explicit caveats. |
-| 💻 **Single, honest CLI** | One `analyze` command, no hidden surface area. |
-| 📴 **Offline-friendly** | `--from-file` runs with no network access. |
-| 🛡️ **Untrusted-input handling** | Issue text is treated as data, never as instructions. |
+| <img src="assets/icons-3d/ai-scan.png" width="18" valign="middle" alt=""> **Repository Intelligence Engine** | Builds a bounded `RepositoryContext` from issue + repository signals. |
+| <img src="assets/icons-3d/search.png" width="18" valign="middle" alt=""> **Engineering diagnosis** | Deterministic root-cause hypotheses, solution strategy, implementation plan, and test strategy — each with confidence, evidence, and limitations. No code fixes. |
+| <img src="assets/icons-3d/target.png" width="18" valign="middle" alt=""> **Deterministic output** | Same inputs → identical outputs. Diff-friendly, reviewable. |
+| <img src="assets/icons-3d/file-text.png" width="18" valign="middle" alt=""> **Evidence & provenance** | Every heuristic carries a confidence score and source evidence; artifacts include a content hash. |
+| <img src="assets/icons-3d/lock.png" width="18" valign="middle" alt=""> **Read-only GitHub ingestion** | Reads an issue and repository signals; writes only local files. |
+| <img src="assets/icons-3d/file-text.png" width="18" valign="middle" alt=""> **PRD artifact generation** | Repository-grounded PRD Markdown with explicit caveats. |
+| <img src="assets/icons-3d/terminal.png" width="18" valign="middle" alt=""> **Single, honest CLI** | One `analyze` command, no hidden surface area. |
+| <img src="assets/icons-3d/signal-off.png" width="18" valign="middle" alt=""> **Offline-friendly** | `--from-file` runs with no network access. |
+| <img src="assets/icons-3d/shield.png" width="18" valign="middle" alt=""> **Untrusted-input handling** | Issue text is treated as data, never as instructions. |
 
 ## Installation
 
